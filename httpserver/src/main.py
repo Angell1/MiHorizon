@@ -26,7 +26,6 @@ def testcase():
     return '<h1>Hello World!</h1>'
 
 
-
 # http://127.0.0.1:8080/testmould/?file=test1API&class=UCTestCase
 # http://127.0.0.1:8080/testmould/?file=test1API&class=UCTestCase,UTest1
 @app.route('/testmould/')

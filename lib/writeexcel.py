@@ -8,7 +8,7 @@ import shutil
 from config import setting
 from openpyxl import load_workbook
 from openpyxl.styles import Font,Alignment
-from openpyxl.styles.colors import RED,GREEN,DARKYELLOW
+from openpyxl.styles.colors import COLOR_INDEX
 import configparser as cparser
 
 # --------- 读取config.ini配置文件 ---------------
@@ -33,9 +33,9 @@ class WriteExcel():
         :param value: 测试结果值
         :return: 无
         """
-        font_GREEN = Font(name='宋体', color=GREEN, bold=True)
-        font_RED = Font(name='宋体', color=RED, bold=True)
-        font1 = Font(name='宋体', color=DARKYELLOW, bold=True)
+        font_GREEN = Font(name='宋体', color=COLOR_INDEX(1), bold=True)
+        font_RED = Font(name='宋体', color=COLOR_INDEX(2), bold=True)
+        font1 = Font(name='宋体', color=COLOR_INDEX(3), bold=True)
         align = Alignment(horizontal='center', vertical='center')
         # 获数所在行数
         L_n = "L" + str(row_n)
