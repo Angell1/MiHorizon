@@ -39,13 +39,15 @@ class ConnConfig():
                                                              "test_condition char(100)," \
                                                              "test_input char(100)," \
                                                              "test_step char(100)," \
-                                                             "test_output char(100));"
+                                                             "test_output char(100)," \
+                                                             "is_connect INT," \
+                                                             "test_module char(30));"
                 db.execute(sql)
                 for i in range(len(excel.index.values)):
 
-                    sql = "insert into " + tablename + "(test_pro,test_id,test_target,test_level,test_condition,test_input,test_step,test_output)" + " values('%s','%s','%s','%s','%s','%s','%s','%s')" % (
+                    sql = "insert into " + tablename + "(test_pro,test_id,test_target,test_level,test_condition,test_input,test_step,test_output,is_connect,test_module)" + " values('%s','%s','%s','%s','%s','%s','%s','%s',0,'%s')" % (
                         excel.iloc[i].测试项目, excel.iloc[i].用例编号, excel.iloc[i].测试目的, excel.iloc[i].重要级别,
-                        excel.iloc[i].预置条件, excel.iloc[i].测试输入, excel.iloc[i].操作步骤, excel.iloc[i].预期输出)
+                        excel.iloc[i].预置条件, excel.iloc[i].测试输入, excel.iloc[i].操作步骤, excel.iloc[i].预期输出,excel.iloc[i].测试模块)
                     db.execute(sql)
                 sql = "create table " + tablename + '_result' + "(id int primary key auto_increment," \
                                                                 "test_caseid INT," \
@@ -57,9 +59,11 @@ class ConnConfig():
                                                                 "test_condition char(100)," \
                                                                 "test_input char(100)," \
                                                                 "test_step char(100)," \
-                                                                "test_output char(100));"
+                                                                "test_output char(100)," \
+                                                                "test_mould char(30));"
                 db.execute(sql)
         return tablenamelist
+
     def createtesttable(self,tablenamelist):
         with self.engine.connect() as db:
             sql = "create table " + 'testtable' + "(id int primary key auto_increment," \
@@ -73,6 +77,21 @@ class ConnConfig():
                 db.execute(sql)
 
 
+    def createcasetable(self):
+        with self.engine.connect() as db:
+            sql = "create table " + 'tecasetable' + "(id int primary key auto_increment," \
+                                                    "test_id INT," \
+                                                    "test_filename char(30)," \
+                                                    "test_classname char(30)," \
+                                                    "test_funcname char(30)," \
+                                                    "test_module char(30));"
+            db.execute(sql)
+
+# Conn = ConnConfig()
+# tablenamelist = Conn.pdtomysql()
+# Conn.createtesttable(tablenamelist)
+
+
+
 Conn = ConnConfig()
-tablenamelist = Conn.pdtomysql()
-Conn.createtesttable(tablenamelist)
+Conn.createcasetable()
