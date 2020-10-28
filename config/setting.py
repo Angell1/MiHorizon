@@ -14,11 +14,6 @@ SOURCE_DIR = os.path.join(BASE_DIR,"database")
 # 测试用例模板文件
 SOURCE_FILE = os.path.join(BASE_DIR,"database","DemoAPITestCase.xlsx")
 # excel测试用例结果目录
-TARGET_DIR = os.path.join(BASE_DIR,"report","excelReport")
-# excel测试用例结果文件
-TARGET_FILE = os.path.join(BASE_DIR,"report","excelReport","DemoAPITestCase.xlsx")
-# 测试用例报告
-TEST_REPORT = os.path.join(BASE_DIR,"report")
-# 测试用例程序文件
-TEST_CASE = os.path.join(BASE_DIR,"testcase")
-
+# TARGET_DIR = os.path.join(BASE_DIR,"report","excelReport")
+# 测试报告
+TEST_REPORTDIR = os.path.join(BASE_DIR,"httpserver",'src','templates')
