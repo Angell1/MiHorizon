@@ -1,5 +1,5 @@
 # -*- coding: <encoding name> -*-
-from flask import Flask,request, jsonify,render_template
+from flask import Flask, request, jsonify, render_template
 import importlib
 import unittest
 import inspect
@@ -24,15 +24,16 @@ class ConnConfig():
         self.USERNAME = cf.get("mysqlconf", "user")
         self.PASSWORD = cf.get("mysqlconf", "password")
         self.DATABASE = cf.get("mysqlconf", "db_name")
-        self.DB_URI = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.USERNAME, self.PASSWORD, self.HOST, self.PORT,self.DATABASE)
+        self.DB_URI = 'mysql+pymysql://{}:{}@{}:{}/{}'.format(self.USERNAME, self.PASSWORD, self.HOST, self.PORT,
+                                                              self.DATABASE)
         # 创建引擎
         self.engine = create_engine(self.DB_URI)
 
-
-# http://127.0.0.1:8081/api//testcase/case/?filename=test1API&classname=UCTestCase&funcname=testCreateFolder&testid=ST-121
+# 后端请求接口：执行测试用例
+# http://127.0.0.1:8081/api/testcaseS/case/?filename=test1API&classname=UCTestCase&funcname=testCreateFolder&testid=ST-121
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
-@app.route('/api/testcase/case/')
+@app.route('/api/testcaseS/case/')
 def excetestcase():
     requests = handler((dict(request.args)))  # 获取所有接收到的参数。
     error = None
@@ -67,18 +68,116 @@ def excetestcase():
         report = new_report(setting.TEST_REPORTDIR)  # 调用模块生成最新的报告
         return jsonify(returnres)
 
+
+# 前端请求接口：执行测试用例
+# http://127.0.0.1:8081/api/testcase/case/?testid=ST-12
+@app.route('/api/testcase/case/')
+def newexcetestcase():
+    # ID
+    requests = handler((dict(request.args)))  # 获取所有接收到的参数。
+    error = None
+    data = None
+    # 反序列化
+    try:
+        schema = model.TestreportlistSchema()
+        data = schema.load(requests)
+        data = schema.dump(data)
+        # print(data)
+    except ValidationError as err:
+        error = err.messages
+        # print(error)
+        # 获取数据
+    returnres = {"state": 200, "msg": "succsuful", "result": ""}
+    reslist = []
+    if error != None:
+        returnres['msg'] = error
+        return jsonify(returnres)
+    else:
+        if 'testid' in data:
+            Conn = ConnConfig()
+            with Conn.engine.connect() as db:
+                sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";'%(data['testid'])
+                print(sql)
+                result = db.execute(sql)
+            result = result.fetchall()
+            if len(result):
+                print("执行测试用例的脚本绑定！")
+                moud, clas = dynamicimport(result[0][0], result[0][1])
+                # 构造测试集
+                suite = unittest.TestSuite()
+                suite.addTest(clas(result[0][2]))
+                # 执行测试，生成测试报告
+                now = time.strftime("%Y-%m-%d %H_%M_%S")
+                filename = setting.TEST_REPORTDIR + '/' + now + '_%s_result.html' % (data['testid'])
+                fp = open(filename, 'wb')
+                runner = HTMLTestRunner(stream=fp, title='测试报告',
+                                        description='环境：windows 10 浏览器：chrome',
+                                        tester='-')
+                runner.run(suite)
+                fp.close()
+                report = new_report(setting.TEST_REPORTDIR)  # 调用模块生成最新的报告
+            else:
+                print("无测试用例的脚本绑定！")
+            returnres['result'] = reslist
+        else:
+            returnres['result'] = reslist
+        return jsonify(returnres)
+
+
+# 前端请求接口：删除测试用例
+# http://127.0.0.1:8081/api/testcase/dcase/?testid=1
+@app.route('/api/testcase/dcase/')
+def delexcetestcase():
+    # ID
+    requests = handler((dict(request.args)))  # 获取所有接收到的参数。
+    error = None
+    data = None
+    # 反序列化
+    try:
+        schema = model.TestreportlistSchema()
+        data = schema.load(requests)
+        data = schema.dump(data)
+        # print(data)
+    except ValidationError as err:
+        error = err.messages
+        # print(error)
+        # 获取数据
+    returnres = {"state": 200, "msg": "succsuful", "result": ""}
+    reslist = []
+    if error != None:
+        returnres['msg'] = error
+        return jsonify(returnres)
+    else:
+
+        if 'testid' in data:
+            Conn = ConnConfig()
+            with Conn.engine.connect() as db:
+
+                sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";' % (data['testid'])
+                print(sql)
+                result = db.execute(sql)
+            result = result.fetchall()
+            if len(result):
+                pass
+            else:
+                print("无测试用例的脚本绑定！")
+            returnres['result'] = reslist
+        else:
+            returnres['result'] = reslist
+        return jsonify(returnres)
+
+
 def handler(requests):
     for i in requests:
-        print(i)
         if requests[i][0]:
             requests[i] = requests[i][0]
         else:
             requests[i] = ""
-    print(requests)
-    return   requests
+    print("解析请求参数:",requests)
+    return requests
 
 
-
+# 后端请求接口：执行测试用例模块
 # http://127.0.0.1:8080/api/module/?file=test1API&class=UCTestCase
 # http://127.0.0.1:8080/api/module/?file=test1API&class=UCTestCase,UTest1
 @app.route('/api/testmodule/module/')
@@ -113,7 +212,7 @@ def excetestmodule():
     return jsonify(returnres)
 
 
-#获取测试示例
+# 前后端接口：获取所有的测试用例
 # http://127.0.0.1:8081/api/testcase/
 @app.route('/api/testcase/')
 def testcase():
@@ -123,30 +222,32 @@ def testcase():
     # 获取数据
     Conn = ConnConfig()
     with Conn.engine.connect() as db:
-            sql = "select * from " + 'testtable where test_tablename_type = 0 ;'
-            result = db.execute(sql)
+        sql = "select * from " + 'testtable where test_tablename_type = 0 ;'
+        result = db.execute(sql)
     result = result.fetchall()
     returnres = {"state": 200, "msg": "succsuful", "result": ""}
     for i in result:
         with Conn.engine.connect() as db:
-                sql = "select * from " + '%s;' % str(i[1])
-                result = db.execute(sql)
+            sql = "select * from " + '%s;' % str(i[1])
+            result = db.execute(sql)
         result = result.fetchall()
         reslist = []
-    # 序列化
+        # 序列化
         for res in result:
             # print(res)
-            testcase = model.TestCase(id=res[0], test_pro=res[1],test_id=res[2],test_target=res[3],test_level=res[4],test_condition = res[5],test_input=res[6],test_step=res[7],test_output=res[8],is_connect=res[9],test_module = res[10])
+            testcase = model.TestCase(id=res[0], test_pro=res[1], test_id=res[2], test_target=res[3], test_level=res[4],
+                                      test_condition=res[5], test_input=res[6], test_step=res[7], test_output=res[8],
+                                      is_connect=res[9], test_module=res[10])
             schema = model.TestCaseSchema()
             dumpres = schema.dump(testcase)
             reslist.append(dumpres)
-     # 对序列化结果进行过滤、排序 pass
+        # 对序列化结果进行过滤、排序 pass
         returnres['result'] = reslist
     # print(returnres)
     return jsonify(returnres)
 
 
-#获取测试用例执行结果
+# 前后端接口：获取所有测试用例执行结果
 # http://127.0.0.1:8081/api/testresult/
 @app.route('/api/testresult/')
 def testresult():
@@ -155,52 +256,54 @@ def testresult():
     # 获取数据
     Conn = ConnConfig()
     with Conn.engine.connect() as db:
-            sql = "select * from " + 'testtable where test_tablename_type = 1 ;'
-            result = db.execute(sql)
+        sql = "select * from " + 'testtable where test_tablename_type = 1 ;'
+        result = db.execute(sql)
     result = result.fetchall()
     returnres = {"state": 200, "msg": "succsuful", "result": ""}
     for i in result:
         with Conn.engine.connect() as db:
-                sql = "select * from " + '%s;' % str(i[1])
-                result = db.execute(sql)
+            sql = "select * from " + '%s;' % str(i[1])
+            result = db.execute(sql)
         result = result.fetchall()
         reslist = []
-    # 序列化
+        # 序列化
         for res in result:
             print(res)
-            testcase = model.TestCaseres(id=res[0], test_caseid=res[1],test_time=res[2],test_pro=res[3],test_target=res[5],test_level=res[6],test_condition = res[7],test_input=res[6],test_step=res[8],test_output=res[9],test_module = res[10])
+            testcase = model.TestCaseres(id=res[0], test_caseid=res[1], test_time=res[2], test_pro=res[3],
+                                         test_target=res[5], test_level=res[6], test_condition=res[7],
+                                         test_input=res[6], test_step=res[8], test_output=res[9], test_module=res[10])
             schema = model.TestCaseresSchema()
             dumpres = schema.dump(testcase)
             reslist.append(dumpres)
-     # 对序列化结果进行过滤、排序 pass
+        # 对序列化结果进行过滤、排序 pass
         returnres['result'] = reslist
     # print(returnres)
     return jsonify(returnres)
 
 
-#获取某个测试用例执行报告
+# 获取某个测试用例执行报告
 # http://127.0.0.1:8081/api/report/?reportname=2020-11-02 11_28_21ST-121_result.html
 @app.route('/api/report/')
 def testreport():
     requests = request.args  # 获取所有接收到的参数。
     print(requests.get('reportname'))
     reportname = requests.get('reportname')
-    return render_template('%s' %reportname)
+    return render_template('%s' % reportname)
 
 
-#获取测试用例报告列表
+# 获取测试用例报告列表
 # http://127.0.0.1:8081/api/reportlist/?testid=ST
 @app.route('/api/reportlist/')
 def testreportlist():
-    #ID
+    # ID
     requests = handler((dict(request.args)))  # 获取所有接收到的参数。
     error = None
     data = None
     # 反序列化
     try:
         schema = model.TestreportlistSchema()
-        data =  schema.load(requests)
-        data= schema.dump(data)
+        data = schema.load(requests)
+        data = schema.dump(data)
         # print(data)
     except ValidationError as err:
         error = err.messages
@@ -225,15 +328,14 @@ def testreportlist():
         return jsonify(returnres)
 
 
-def dynamicimport(filename,clasname):
+def dynamicimport(filename, clasname):
     # 动态导入包
     moud = importlib.import_module('testcase.%s' % filename, package='testcase')
     # 实例化类
     clas = getattr(moud, clasname)
 
-    return moud,clas
-
+    return moud, clas
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1',port=8081,debug=True)
+    app.run(host='127.0.0.1', port=8081, debug=True)

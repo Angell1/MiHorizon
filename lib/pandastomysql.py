@@ -80,7 +80,7 @@ class ConnConfig():
     def createcasetable(self):
         with self.engine.connect() as db:
             sql = "create table " + 'tecasetable' + "(id int primary key auto_increment," \
-                                                    "test_id INT," \
+                                                    "test_id char(30)," \
                                                     "test_filename char(30)," \
                                                     "test_classname char(30)," \
                                                     "test_funcname char(30)," \
