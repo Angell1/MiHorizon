@@ -72,15 +72,17 @@ class TestCaseres(object):
 
 
 class Testcaseinput(object):
-    def __init__(self, filename, classname,funcname):
+    def __init__(self, filename, classname,funcname,testid):
         self.filename = filename
         self.classname = classname
         self.funcname = funcname
+        self.testid = testid
 
 class TestcaseinputSchema(Schema):
     filename = fields.Str(required=True)
     classname = fields.Str(required=True)
     funcname = fields.Str(required=True)
+    testid = fields.Str(required=True)
 
     @validates('filename')
     def validate_filename(self, value):
@@ -96,6 +98,34 @@ class TestcaseinputSchema(Schema):
     def validate_funcname(self, value):
         if len(value) == 0:
             raise ValidationError('funcname is null.')
+
+    @validates('testid')
+    def validate_funcname(self, value):
+        if len(value) == 0:
+            raise ValidationError('testid is null.')
+
     @post_load
     def make_user(self,data, **kwargs):
         return Testcaseinput(**data)
+
+
+class Testreportlist(object):
+    def __init__(self, testid):
+        self.testid = testid
+
+
+class TestreportlistSchema(Schema):
+    testid = fields.Str()
+
+    @validates('testid')
+    def validate_filename(self, value):
+        pass
+        # if len(value) == 0:
+        #     raise ValidationError('testid is null.')
+
+    @post_load
+    def make_user(self,data, **kwargs):
+        if data:
+            return Testreportlist(**data)
+        else:
+            return

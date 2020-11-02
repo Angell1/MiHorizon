@@ -4,6 +4,7 @@ import importlib
 import unittest
 import inspect
 import time
+import os
 from sqlalchemy import create_engine
 from marshmallow import ValidationError
 from config import setting
@@ -27,10 +28,11 @@ class ConnConfig():
         # 创建引擎
         self.engine = create_engine(self.DB_URI)
 
-# http://127.0.0.1:8081/api//testcase/case/?filename=test1API&classename=UCTestCase&funcname=testCreateFolder
+
+# http://127.0.0.1:8081/api//testcase/case/?filename=test1API&classname=UCTestCase&funcname=testCreateFolder&testid=ST-121
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
-@app.route('/api//testcase/case/')
+@app.route('/api/testcase/case/')
 def excetestcase():
     requests = handler((dict(request.args)))  # 获取所有接收到的参数。
     error = None
@@ -55,7 +57,7 @@ def excetestcase():
         suite.addTest(clas(data['funcname']))
         # 执行测试，生成测试报告
         now = time.strftime("%Y-%m-%d %H_%M_%S")
-        filename = setting.TEST_REPORTDIR + '/' + now + 'result.html'
+        filename = setting.TEST_REPORTDIR + '/' + now + '_%s_result.html' %(data['testid'])
         fp = open(filename, 'wb')
         runner = HTMLTestRunner(stream=fp, title='发布会系统接口自动化测试报告',
                                 description='环境：windows 10 浏览器：chrome',
@@ -143,6 +145,7 @@ def testcase():
     # print(returnres)
     return jsonify(returnres)
 
+
 #获取测试用例执行结果
 # http://127.0.0.1:8081/api/testresult/
 @app.route('/api/testresult/')
@@ -174,15 +177,53 @@ def testresult():
     # print(returnres)
     return jsonify(returnres)
 
-#获取测试用例执行结果
-# http://127.0.0.1:8081/api/testresult/
+
+#获取某个测试用例执行报告
+# http://127.0.0.1:8081/api/report/?reportname=2020-11-02 11_28_21ST-121_result.html
 @app.route('/api/report/')
 def testreport():
     requests = request.args  # 获取所有接收到的参数。
     print(requests.get('reportname'))
     reportname = requests.get('reportname')
-
     return render_template('%s' %reportname)
+
+
+#获取测试用例报告列表
+# http://127.0.0.1:8081/api/reportlist/?testid=ST
+@app.route('/api/reportlist/')
+def testreportlist():
+    #ID
+    requests = handler((dict(request.args)))  # 获取所有接收到的参数。
+    error = None
+    data = None
+    # 反序列化
+    try:
+        schema = model.TestreportlistSchema()
+        data =  schema.load(requests)
+        data= schema.dump(data)
+        # print(data)
+    except ValidationError as err:
+        error = err.messages
+        # print(error)
+    returnres = {"state": 200, "msg": "succsuful", "result": ""}
+    reslist = []
+    if error != None:
+        returnres['msg'] = error
+        return jsonify(returnres)
+    else:
+        if 'testid' in data:
+            for files in os.listdir(setting.TEST_REPORTDIR):
+                if data['testid'] in files:
+                    reslist.append(files)
+                    print(files)
+            returnres['result'] = reslist
+        else:
+            for files in os.listdir(setting.TEST_REPORTDIR):
+                reslist.append(files)
+                print(files)
+            returnres['result'] = reslist
+        return jsonify(returnres)
+
 
 def dynamicimport(filename,clasname):
     # 动态导入包
