@@ -79,7 +79,7 @@ class ConnConfig():
 
     def createcasetable(self):
         with self.engine.connect() as db:
-            sql = "create table " + 'tecasetable' + "(id int primary key auto_increment," \
+            sql = "create table " + 'casetable' + "(id int primary key auto_increment," \
                                                     "test_id char(30)," \
                                                     "test_filename char(30)," \
                                                     "test_classname char(30)," \
@@ -87,6 +87,24 @@ class ConnConfig():
                                                     "test_module char(30));"
             db.execute(sql)
 
+    def createmoudletable(self):
+        with self.engine.connect() as db:
+            sql = "create table " + 'moudletable' + "(id int primary key auto_increment," \
+                                                    "moudle_name char(30)," \
+                                                    "test_filename char(30)," \
+                                                    "test_classname char(30));"
+            db.execute(sql)
+
+    def createtasktable(self):
+        with self.engine.connect() as db:
+            sql = "create table " + 'tasktable' + "(id int primary key auto_increment," \
+                                                  "taskname char(30)," \
+                                                  "task_id char(30)," \
+                                                  "moudle_id INT," \
+                                                  "moudle_name char(30)," \
+                                                  "task_type char(30));" \
+
+            db.execute(sql)
 # Conn = ConnConfig()
 # tablenamelist = Conn.pdtomysql()
 # Conn.createtesttable(tablenamelist)
@@ -94,4 +112,4 @@ class ConnConfig():
 
 
 Conn = ConnConfig()
-Conn.createcasetable()
+Conn.createtasktable()

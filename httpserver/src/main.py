@@ -29,10 +29,13 @@ class ConnConfig():
         # 创建引擎
         self.engine = create_engine(self.DB_URI)
 
+
 # 后端请求接口：执行测试用例
 # http://127.0.0.1:8081/api/testcaseS/case/?filename=test1API&classname=UCTestCase&funcname=testCreateFolder&testid=ST-121
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
+
+
 @app.route('/api/testcaseS/case/')
 def excetestcase():
     requests = handler((dict(request.args)))  # 获取所有接收到的参数。
@@ -41,8 +44,8 @@ def excetestcase():
     # 反序列化
     try:
         schema = model.TestcaseinputSchema()
-        data =  schema.load(requests)
-        data= schema.dump(data)
+        data = schema.load(requests)
+        data = schema.dump(data)
         # print(data)
     except ValidationError as err:
         error = err.messages
@@ -58,7 +61,7 @@ def excetestcase():
         suite.addTest(clas(data['funcname']))
         # 执行测试，生成测试报告
         now = time.strftime("%Y-%m-%d %H_%M_%S")
-        filename = setting.TEST_REPORTDIR + '/' + now + '_%s_result.html' %(data['testid'])
+        filename = setting.TEST_REPORTDIR + '/' + now + '_%s_result.html' % (data['testid'])
         fp = open(filename, 'wb')
         runner = HTMLTestRunner(stream=fp, title='发布会系统接口自动化测试报告',
                                 description='环境：windows 10 浏览器：chrome',
@@ -96,7 +99,8 @@ def newexcetestcase():
         if 'testid' in data:
             Conn = ConnConfig()
             with Conn.engine.connect() as db:
-                sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";'%(data['testid'])
+                sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";' % (
+                data['testid'])
                 print(sql)
                 result = db.execute(sql)
             result = result.fetchall()
@@ -153,7 +157,8 @@ def delexcetestcase():
             Conn = ConnConfig()
             with Conn.engine.connect() as db:
 
-                sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";' % (data['testid'])
+                sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";' % (
+                data['testid'])
                 print(sql)
                 result = db.execute(sql)
             result = result.fetchall()
@@ -173,7 +178,7 @@ def handler(requests):
             requests[i] = requests[i][0]
         else:
             requests[i] = ""
-    print("解析请求参数:",requests)
+    print("解析请求参数:", requests)
     return requests
 
 
@@ -243,6 +248,63 @@ def testcase():
             reslist.append(dumpres)
         # 对序列化结果进行过滤、排序 pass
         returnres['result'] = reslist
+    # print(returnres)
+    return jsonify(returnres)
+
+
+# 前后端接口：获取所有的任务
+# http://127.0.0.1:8081/api/tetask/
+@app.route('/api/tetask/')
+def task():
+    requests = request.args  # 获取所有接收到的参数。
+    print(request.args)
+    # 反序列化 pass
+    # 获取数据
+    Conn = ConnConfig()
+    with Conn.engine.connect() as db:
+        sql = "select * from tasktable;"
+        result = db.execute(sql)
+    result = result.fetchall()
+    returnres = {"state": 200, "msg": "succsuful", "result": ""}
+    reslist = []
+    # 序列化
+    for res in result:
+        # print(res)
+        testcase = model.Task(id=res[0], taskname=res[1], task_id=res[2], moudle_id=res[3], moudle_name=res[4],
+                              task_type=res[5])
+        schema = model.TaskSchema()
+        dumpres = schema.dump(testcase)
+        reslist.append(dumpres)
+    # 对序列化结果进行过滤、排序 pass
+    returnres['result'] = reslist
+    # print(returnres)
+    return jsonify(returnres)
+
+
+# 前后端接口：获取所有的测试模块
+# http://127.0.0.1:8081/api/temoudle/
+@app.route('/api/temoudle/')
+def moudle():
+    requests = request.args  # 获取所有接收到的参数。
+    print(request.args)
+    # 反序列化 pass
+    # 获取数据
+    Conn = ConnConfig()
+    with Conn.engine.connect() as db:
+        sql = "select * from moudletable;"
+        result = db.execute(sql)
+    result = result.fetchall()
+    returnres = {"state": 200, "msg": "succsuful", "result": ""}
+    reslist = []
+    # 序列化
+    for res in result:
+        # print(res)
+        testcase = model.Moudle(id=res[0], moudle_name=res[1], test_filename=res[2], test_classname=res[3])
+        schema = model.MoudleSchema()
+        dumpres = schema.dump(testcase)
+        reslist.append(dumpres)
+    # 对序列化结果进行过滤、排序 pass
+    returnres['result'] = reslist
     # print(returnres)
     return jsonify(returnres)
 

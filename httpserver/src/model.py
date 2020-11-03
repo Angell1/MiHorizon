@@ -71,6 +71,51 @@ class TestCaseres(object):
         return '<User(name={self.name!r})>'.format(self=self)
 
 
+
+
+class TaskSchema(Schema):
+    id = fields.Int()
+    taskname = fields.Str()
+    task_id = fields.Str()
+    moudle_id = fields.Str()
+    moudle_name = fields.Str()
+    task_type = fields.Str()
+
+
+class Task(object):
+    def __init__(self, id,taskname,task_id, moudle_id,moudle_name,task_type):
+        self.id = id
+        self.taskname = taskname
+        self.task_id = task_id
+        self.moudle_id = moudle_id
+        self.moudle_name = moudle_name
+        self.task_type = task_type
+
+    def __repr__(self):
+        return '<User(name={self.name!r})>'.format(self=self)
+
+
+
+class MoudleSchema(Schema):
+    id = fields.Int()
+    moudle_name = fields.Str()
+    test_filename = fields.Str()
+    test_classname = fields.Str()
+
+
+class Moudle(object):
+    def __init__(self, id,moudle_name,test_filename, test_classname):
+        self.id = id
+        self.moudle_name = moudle_name
+        self.test_filename = test_filename
+        self.test_classname = test_classname
+
+
+    def __repr__(self):
+        return '<User(name={self.name!r})>'.format(self=self)
+
+
+
 class Testcaseinput(object):
     def __init__(self, filename, classname,funcname,testid):
         self.filename = filename
