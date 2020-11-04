@@ -99,7 +99,7 @@ class ConnConfig():
         with self.engine.connect() as db:
             sql = "create table " + 'tasktable' + "(id int primary key auto_increment," \
                                                   "taskname char(30)," \
-                                                  "task_id char(30)," \
+                                                  "task_id char(50)," \
                                                   "moudle_id INT," \
                                                   "moudle_name char(30)," \
                                                   "task_type char(30)," \

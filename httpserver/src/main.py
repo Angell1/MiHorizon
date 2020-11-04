@@ -12,7 +12,7 @@ import configparser as cparser
 from httpserver.src import model
 from lib.newReport import new_report
 from package.HTMLTestRunner import HTMLTestRunner
-
+from celery_task import tasks
 
 class ConnConfig():
     def __init__(self):
@@ -207,7 +207,7 @@ def excetestmodule():
 
 
 # 前端请求接口：创建任务并异步执行接口
-# http://127.0.0.1:8080/api/testtask/?id=1
+# http://127.0.0.1:8080/api/testtask/?
 @app.route('/api/testtask/')
 def newexcetestmodule():
     # ID
@@ -226,19 +226,45 @@ def newexcetestmodule():
         print(error)
         # 获取数据
     returnres = {"state": 200, "msg": "succsuful", "result": ""}
-    reslist = []
     if error != None:
         returnres['msg'] = error
         return jsonify(returnres)
     else:
         print(data)
-        # Conn = ConnConfig()
-        # with Conn.engine.connect() as db:
-        #     sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";' % (
-        #         data['testid'])
-        #     print(sql)
-        #     result = db.execute(sql)
-        # result = result.fetchall()
+
+        if data['task_type'] == '1':
+            time_temp = data['date1'] +' ' + data['date2']
+            # 格式化时间转换为结构化时间
+            struct_time1 = time.strptime(time_temp, '%Y-%m-%d %H-%M-%S')
+            struct_time2 = time.strptime(time.strftime('%Y-%m-%d %H-%M-%S'),'%Y-%m-%d %H-%M-%S')
+            print(struct_time1,struct_time2)
+            time1 = time.mktime(struct_time1)
+            time2 = time.mktime(struct_time2)
+            # 差的时间戳
+            diff_time = time1 - time2
+            print(diff_time)
+            if diff_time < 0:
+                diff_time = 0
+            print(diff_time)
+            task_id =  tasks.create_timingtask.apply_async(([data]), countdown=int(diff_time))
+        else:
+            task_id = tasks.create_steptask.apply_async(([data]), countdown=0)
+        print("task_id:",task_id)
+        Conn = ConnConfig()
+        with Conn.engine.connect() as db:
+            if data['task_type'] == "1":
+                task_context = data['date1'] + ' ' + data['date2']
+            else:
+                task_context = data['date3']
+            sql = "select moudle_name,test_filename,test_classname from " + 'moudletable where id = %d;' % (
+                data['moudleid'])
+            print(sql)
+            result = db.execute(sql)
+            result = result.fetchall()
+            sql = "insert into  tasktable(taskname,task_type,moudle_id,task_context,moudle_name,task_id) values('%s','%s','%d','%s','%s','%s');" % (
+                data['task_name'], data['task_type'], data['moudleid'], task_context, result[0][0],task_id)
+            print(sql)
+            db.execute(sql)
     return jsonify(returnres)
 
 
@@ -414,6 +440,12 @@ def testreportlist():
             returnres['result'] = reslist
         return jsonify(returnres)
 
+#
+# http://127.0.0.1:8081/api/test/
+@app.route('/api/test/')
+def test():
+    tasks.add.apply_async((3, 3),countdown = 10)
+    return ""
 
 def dynamicimport(filename, clasname):
     # 动态导入包
