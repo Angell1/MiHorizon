@@ -34,8 +34,6 @@ class ConnConfig():
 # http://127.0.0.1:8081/api/testcaseS/case/?filename=test1API&classname=UCTestCase&funcname=testCreateFolder&testid=ST-121
 app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
-
-
 @app.route('/api/testcaseS/case/')
 def excetestcase():
     requests = handler((dict(request.args)))  # 获取所有接收到的参数。
@@ -99,7 +97,7 @@ def newexcetestcase():
         if 'testid' in data:
             Conn = ConnConfig()
             with Conn.engine.connect() as db:
-                sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";' % (
+                sql = "select test_filename,test_classname,test_funcname from " + 'casetable where test_id = "%s";' % (
                 data['testid'])
                 print(sql)
                 result = db.execute(sql)
@@ -172,20 +170,11 @@ def delexcetestcase():
         return jsonify(returnres)
 
 
-def handler(requests):
-    for i in requests:
-        if requests[i][0]:
-            requests[i] = requests[i][0]
-        else:
-            requests[i] = ""
-    print("解析请求参数:", requests)
-    return requests
-
 
 # 后端请求接口：执行测试用例模块
 # http://127.0.0.1:8080/api/module/?file=test1API&class=UCTestCase
 # http://127.0.0.1:8080/api/module/?file=test1API&class=UCTestCase,UTest1
-@app.route('/api/testmodule/module/')
+@app.route('/api/testmodules/module/')
 def excetestmodule():
     requests = request.args  # 获取所有接收到的参数。
     print(requests.get('file'))
@@ -214,6 +203,42 @@ def excetestmodule():
         # 执行测试
         runner = unittest.TextTestRunner()
         runner.run(suite)
+    return jsonify(returnres)
+
+
+# 前端请求接口：创建任务并异步执行接口
+# http://127.0.0.1:8080/api/testtask/?id=1
+@app.route('/api/testtask/')
+def newexcetestmodule():
+    # ID
+    requests = handler((dict(request.args)))  # 获取所有接收到的参数。
+    print(requests)
+    error = None
+    data = None
+    # 反序列化
+    try:
+        schema = model.TaskinputSchema()
+        data = schema.load(requests)
+        data = schema.dump(data)
+        # print(data)
+    except ValidationError as err:
+        error = err.messages
+        print(error)
+        # 获取数据
+    returnres = {"state": 200, "msg": "succsuful", "result": ""}
+    reslist = []
+    if error != None:
+        returnres['msg'] = error
+        return jsonify(returnres)
+    else:
+        print(data)
+        # Conn = ConnConfig()
+        # with Conn.engine.connect() as db:
+        #     sql = "select test_filename,test_classname,test_funcname from " + 'tecasetable where test_id = "%s";' % (
+        #         data['testid'])
+        #     print(sql)
+        #     result = db.execute(sql)
+        # result = result.fetchall()
     return jsonify(returnres)
 
 
@@ -271,7 +296,7 @@ def task():
     for res in result:
         # print(res)
         testcase = model.Task(id=res[0], taskname=res[1], task_id=res[2], moudle_id=res[3], moudle_name=res[4],
-                              task_type=res[5])
+                              task_type=res[5],task_context = res[6])
         schema = model.TaskSchema()
         dumpres = schema.dump(testcase)
         reslist.append(dumpres)
@@ -330,7 +355,7 @@ def testresult():
         reslist = []
         # 序列化
         for res in result:
-            print(res)
+            # print(res)
             testcase = model.TestCaseres(id=res[0], test_caseid=res[1], test_time=res[2], test_pro=res[3],
                                          test_target=res[5], test_level=res[6], test_condition=res[7],
                                          test_input=res[6], test_step=res[8], test_output=res[9], test_module=res[10])
@@ -397,6 +422,15 @@ def dynamicimport(filename, clasname):
     clas = getattr(moud, clasname)
 
     return moud, clas
+
+def handler(requests):
+    for i in requests:
+        if requests[i][0]:
+            requests[i] = requests[i][0]
+        else:
+            requests[i] = ""
+    print("解析请求参数:", requests)
+    return requests
 
 
 if __name__ == '__main__':

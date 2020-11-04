@@ -80,16 +80,18 @@ class TaskSchema(Schema):
     moudle_id = fields.Str()
     moudle_name = fields.Str()
     task_type = fields.Str()
+    task_context = fields.Str()
 
 
 class Task(object):
-    def __init__(self, id,taskname,task_id, moudle_id,moudle_name,task_type):
+    def __init__(self, id,taskname,task_id, moudle_id,moudle_name,task_type,task_context):
         self.id = id
         self.taskname = taskname
         self.task_id = task_id
         self.moudle_id = moudle_id
         self.moudle_name = moudle_name
         self.task_type = task_type
+        self.task_context = task_context
 
     def __repr__(self):
         return '<User(name={self.name!r})>'.format(self=self)
@@ -174,3 +176,46 @@ class TestreportlistSchema(Schema):
             return Testreportlist(**data)
         else:
             return
+
+
+
+class Taskinput(object):
+    def __init__(self, moudleid, task_name,task_type,date1,date2,date3):
+        self.moudleid = moudleid
+        self.task_name = task_name
+        self.task_type = task_type
+        self.date1 = date1
+        self.date2 = date2
+        self.date3 = date3
+
+class TaskinputSchema(Schema):
+    moudleid = fields.Int(required=True)
+    task_name = fields.Str(required=True)
+    task_type = fields.Str(required=True)
+    date1 = fields.Str(required=True)
+    date2 = fields.Str(required=True)
+    date3 = fields.Str(required=True)
+
+    # @validates('filename')
+    # def validate_filename(self, value):
+    #     if len(value) == 0:
+    #         raise ValidationError('filename is null.')
+    #
+    # @validates('classname')
+    # def validate_classname(self, value):
+    #     if len(value) == 0:
+    #         raise ValidationError('classname is null.')
+    #
+    # @validates('funcname')
+    # def validate_funcname(self, value):
+    #     if len(value) == 0:
+    #         raise ValidationError('funcname is null.')
+    #
+    # @validates('testid')
+    # def validate_funcname(self, value):
+    #     if len(value) == 0:
+    #         raise ValidationError('testid is null.')
+
+    @post_load
+    def make_user(self,data, **kwargs):
+        return Taskinput(**data)

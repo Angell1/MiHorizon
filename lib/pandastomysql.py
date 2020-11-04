@@ -102,7 +102,8 @@ class ConnConfig():
                                                   "task_id char(30)," \
                                                   "moudle_id INT," \
                                                   "moudle_name char(30)," \
-                                                  "task_type char(30));" \
+                                                  "task_type char(30)," \
+                                                  "task_context char(50));"
 
             db.execute(sql)
 # Conn = ConnConfig()
