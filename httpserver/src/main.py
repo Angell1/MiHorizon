@@ -4,6 +4,7 @@ import importlib
 import unittest
 import inspect
 import time
+import random
 import os
 from sqlalchemy import create_engine
 from marshmallow import ValidationError
@@ -440,19 +441,19 @@ def testreportlist():
             returnres['result'] = reslist
         return jsonify(returnres)
 
-#
+
 # http://127.0.0.1:8081/api/test/
 @app.route('/api/test/')
 def test():
     tasks.add.apply_async((3, 3),countdown = 10)
     return ""
 
+
 def dynamicimport(filename, clasname):
     # 动态导入包
     moud = importlib.import_module('testcase.%s' % filename, package='testcase')
     # 实例化类
     clas = getattr(moud, clasname)
-
     return moud, clas
 
 def handler(requests):
@@ -463,6 +464,54 @@ def handler(requests):
             requests[i] = ""
     print("解析请求参数:", requests)
     return requests
+
+# 获取图表数据
+# http://127.0.0.1:8081/api/chartdata1/
+@app.route('/api/chartdata1/')
+def chartdata1():
+    returnres = {"state": 200, "msg": "succsuful", "data": ""}
+    reslist = [{'name':'springboot','value':1000},{'name':'vue','value':800}]
+    resdict = {'videoData': reslist}
+    returnres["data"] = resdict
+    return jsonify(returnres)
+
+
+# 获取图表数据
+# http://127.0.0.1:80821/api/chartdata2/?xx=
+@app.route('/api/chartdata2/')
+def chartdata2():
+    returnres = {"state": 200, "msg": "succsuful", "data": ""}
+    reslist = [{'date': '周一', 'new': 100, 'active': 200}, {'date': '周二', 'new': 100, 'active': 200},
+               {'date': '周三', 'new': 100, 'active': 200}, {'date': '周四', 'new': 100, 'active': 200},
+               {'date': '周五', 'new': 100, 'active': 200}, {'date': '周六', 'new': 100, 'active': 200},
+               {'date': '周日', 'new': 100, 'active': 200}]
+    resdict = {'userData': reslist}
+    returnres["data"] = resdict
+    return jsonify(returnres)
+
+
+# 获取图表数据
+# http://127.0.0.1:80821/api/chartdata3/?xx=
+@app.route('/api/chartdata3/')
+def chartdata3():
+    returnres = {"state": 200, "msg": "succsuful", "data": ""}
+    datalist = []
+    reslist = {'date':['20191001', '20191002', '20191003', '20191004', '20191005', '20191006', '20191007'],'data':''}
+    for i in range(0,7):
+      datalist.append(
+          {
+          'vue': random.randint(1, 500),
+          'wechat': random.randint(1, 500),
+          'ES6': random.randint(1, 500),
+          'Redis': random.randint(1, 500),
+          'React': random.randint(1, 500),
+          'springboot': random.randint(1, 500)
+        })
+    reslist['data'] =datalist
+    resdict = {'orderData': reslist}
+    returnres["data"] = resdict
+
+    return jsonify(returnres)
 
 
 if __name__ == '__main__':
