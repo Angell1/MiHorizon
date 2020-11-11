@@ -465,6 +465,7 @@ def handler(requests):
     print("解析请求参数:", requests)
     return requests
 
+
 # 获取图表数据
 # http://127.0.0.1:8081/api/chartdata1/
 @app.route('/api/chartdata1/')
@@ -510,7 +511,40 @@ def chartdata3():
     reslist['data'] =datalist
     resdict = {'orderData': reslist}
     returnres["data"] = resdict
+    return jsonify(returnres)
 
+
+# 前端请求接口：执行测试用例
+# http://127.0.0.1:8081/api/register/?xx=
+@app.route('/api/register/')
+def register():
+    # ID
+    requests = handler((dict(request.args)))  # 获取所有接收到的参数。
+    error = None
+    data = None
+    # 反序列化
+    try:
+        schema = model.UserinputSchema()
+        data = schema.load(requests)
+        data = schema.dump(data)
+        print(data)
+    except ValidationError as err:
+        error = err.messages
+        print(error)
+    returnres = {"state": 200, "msg": "succsuful", "result": ""}
+    reslist = []
+    if error != None:
+        returnres['msg'] = error
+        return jsonify(returnres)
+    else:
+        Conn = ConnConfig()
+        with Conn.engine.connect() as db:
+            sql = "select id from " + 'user where username = "%s";' % (data['username'])
+            print(sql)
+            result = db.execute(sql)
+        result = result.fetchall()
+
+        print(len(result))
     return jsonify(returnres)
 
 

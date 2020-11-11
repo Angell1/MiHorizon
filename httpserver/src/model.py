@@ -219,3 +219,58 @@ class TaskinputSchema(Schema):
     @post_load
     def make_user(self,data, **kwargs):
         return Taskinput(**data)
+
+
+
+class Userinput(object):
+    def __init__(self, username,password,email):
+        self.username = username
+        self.password = password
+        self.email = email
+
+
+class UserinputSchema(Schema):
+    username = fields.Str(required=True)
+    password = fields.Str(required=True)
+    email = fields.Str(required=True)
+
+
+    # @validates('filename')
+    # def validate_filename(self, value):
+    #     if len(value) == 0:
+    #         raise ValidationError('filename is null.')
+    #
+    # @validates('classname')
+    # def validate_classname(self, value):
+    #     if len(value) == 0:
+    #         raise ValidationError('classname is null.')
+    #
+    # @validates('funcname')
+    # def validate_funcname(self, value):
+    #     if len(value) == 0:
+    #         raise ValidationError('funcname is null.')
+    #
+    # @validates('testid')
+    # def validate_funcname(self, value):
+    #     if len(value) == 0:
+    #         raise ValidationError('testid is null.')
+
+    @post_load
+    def make_user(self,data, **kwargs):
+        return Userinput(**data)
+
+
+class User(object):
+    def __init__(self, id, username,password,email):
+        self.id = id
+        self.username = username
+        self.password = password
+        self.email = email
+    def __repr__(self):
+        return '<User(name={self.name!r})>'.format(self=self)
+
+class UserSchema(Schema):
+    id = fields.Int(required=True)
+    username = fields.Str(required=True)
+    password = fields.Str(required=True)
+    email = fields.Str(required=True)

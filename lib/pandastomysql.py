@@ -106,6 +106,15 @@ class ConnConfig():
                                                   "task_context char(50));"
 
             db.execute(sql)
+
+    def createusertable(self):
+        with self.engine.connect() as db:
+            sql = "create table " + 'user' + "(id int primary key auto_increment," \
+                                                  "username char(30)," \
+                                                  "password char(50)," \
+                                                  "email char(50));"
+
+            db.execute(sql)
 # Conn = ConnConfig()
 # tablenamelist = Conn.pdtomysql()
 # Conn.createtesttable(tablenamelist)
@@ -113,4 +122,4 @@ class ConnConfig():
 
 
 Conn = ConnConfig()
-Conn.createtasktable()
+Conn.createusertable()

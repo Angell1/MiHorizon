@@ -919,8 +919,6 @@ class TestProgram(unittest.TestProgram):
         if self.testRunner is None:
             self.testRunner = HTMLTestRunner(verbosity=self.verbosity)
         unittest.TestProgram.runTests(self)
-
-
 main = TestProgram
 
 ##############################################################################
