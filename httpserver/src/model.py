@@ -274,3 +274,40 @@ class UserSchema(Schema):
     username = fields.Str(required=True)
     password = fields.Str(required=True)
     email = fields.Str(required=True)
+
+
+
+class Userlogininput(object):
+    def __init__(self, username,password):
+        self.username = username
+        self.password = password
+
+class UserinputloginSchema(Schema):
+    username = fields.Str(required=True)
+    password = fields.Str(required=True)
+
+    @post_load
+    def make_user(self,data, **kwargs):
+        return Userlogininput(**data)
+
+
+
+
+class UserinfoSchema(Schema):
+    id = fields.Int()
+    username = fields.Str()
+    password = fields.Str()
+    email = fields.Str()
+
+
+class Userinfo(object):
+    def __init__(self, id,username,password, email):
+        self.id = id
+        self.username = username
+        self.password = password
+        self.email = email
+
+    def __repr__(self):
+        return '<User(name={self.name!r})>'.format(self=self)
+
+

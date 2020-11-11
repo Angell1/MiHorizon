@@ -514,7 +514,7 @@ def chartdata3():
     return jsonify(returnres)
 
 
-# 前端请求接口：执行测试用例
+# 前端请求接口：注册接口
 # http://127.0.0.1:8081/api/register/?xx=
 @app.route('/api/register/')
 def register():
@@ -542,11 +542,60 @@ def register():
             sql = "select id from " + 'user where username = "%s";' % (data['username'])
             print(sql)
             result = db.execute(sql)
-        result = result.fetchall()
-
-        print(len(result))
+            result = result.fetchall()
+            print(len(result))
+            if len(result) == 0:
+                sql = "insert into  user(username,password,email) values('%s','%s','%s');" % (data['username'], data['password'], data['email'])
+                print(sql)
+                db.execute(sql)
+            else:
+                returnres = {"state": 202, "msg": "faill", "result": "用户名已存在"}
     return jsonify(returnres)
 
+
+# 前端请求接口：注册接口
+# http://127.0.0.1:8081/api/login/?xx=
+@app.route('/api/login/')
+def login():
+    # ID
+    requests = handler((dict(request.args)))  # 获取所有接收到的参数。
+    error = None
+    data = None
+    # 反序列化
+    try:
+        schema = model.UserinputloginSchema()
+        data = schema.load(requests)
+        data = schema.dump(data)
+        print(data)
+    except ValidationError as err:
+        error = err.messages
+        print(error)
+    returnres = {"state": 200, "msg": "succsuful", "result": ""}
+    reslist = []
+    if error != None:
+        returnres['msg'] = error
+        return jsonify(returnres)
+    else:
+        pass
+        Conn = ConnConfig()
+        with Conn.engine.connect() as db:
+            sql = "select id,username,password,email from " + 'user where username = "%s";' % (data['username'])
+            print(sql)
+            result = db.execute(sql)
+            result = result.fetchall()
+            print(result)
+            if(len(result) == 0):
+                returnres = {"state": 201, "msg": "faill", "result": "用户不存在"}
+            elif(result[0][2] !=data['password']):
+                print(data['password'],result[0][2])
+                returnres = {"state": 203, "msg": "faill", "result": "密码错误"}
+            else:
+                Userinfo = model.Userinfo(id=result[0][0], username=result[0][1], password=result[0][2], email=result[0][3])
+                schema = model.UserinfoSchema()
+                dumpres = schema.dump(Userinfo)
+                reslist.append(dumpres)
+                returnres = {"state": 200, "msg": "succsuful", "result": reslist}
+    return jsonify(returnres)
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=8081, debug=True)
